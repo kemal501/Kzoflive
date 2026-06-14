@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
 import { doc, runTransaction, serverTimestamp, collection, increment } from 'firebase/firestore';
-import { TASKS, getUserTasksProgress, UserTaskProgress, Task, updateTaskProgress } from '../services/taskService';
+import { TASKS, getUserTasksProgress, UserTaskProgress, Task, updateTaskProgress, claimTaskReward } from '../services/taskService';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, Award, Coins, TrendingUp, Clock, Gift, UserPlus, LayoutGrid, Users, Cpu, Sparkles, Facebook, Youtube, Send, ExternalLink, HelpCircle, BookOpen } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -70,89 +70,20 @@ const TasksPage: React.FC = () => {
     
     // Trigger medium haptic impact on starting verification
     triggerImpact('medium');
-
-    const userId = auth.currentUser.uid;
     setVerifyingTaskId(task.id);
 
-    // Simulate checking the completion status, display a loading spinner for 2 seconds
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
     try {
-      const userRef = doc(db, 'users', userId);
-      const progressRef = doc(db, 'userTasks', `${userId}_${task.id}`);
-
-      await runTransaction(db, async (transaction) => {
-        const progressDoc = await transaction.get(progressRef);
-
-        if (!progressDoc.exists()) {
-          transaction.set(progressRef, {
-            taskId: task.id,
-            userId,
-            currentProgress: task.goal,
-            completed: true,
-            claimed: true,
-            lastUpdated: serverTimestamp()
-          });
-        } else {
-          transaction.update(progressRef, {
-            currentProgress: task.goal,
-            completed: true,
-            claimed: true,
-            lastUpdated: serverTimestamp()
-          });
-        }
-
-        // Add reward coins to user's profile
-        transaction.update(userRef, {
-          coins: increment(task.reward),
-          dailyGoalTasksCompleted: increment(1)
-        });
-
-        // Record the transaction in the coinTransactions collection ledger
-        const ledgerRef = doc(collection(db, 'coinTransactions'));
-        transaction.set(ledgerRef, {
-          userId,
-          amount: task.reward,
-          type: 'task_verification',
-          description: `Verified and claimed mission: ${task.title} (+${task.reward.toLocaleString()} $FISH)`,
-          createdAt: new Date().toISOString()
-        });
-      });
+      // Execute the actual claim process which validates completion
+      const reward = await claimTaskReward(auth.currentUser.uid, task.id);
 
       // Clear verifying task, set celebration state, and trigger confetti
-      setSuccessClaimedReward({ amount: task.reward, title: task.title });
+      setSuccessClaimedReward({ amount: reward, title: task.title });
       
       // Trigger success haptic notification
       triggerNotification('success');
 
-      // Initial standard confetti shower
-      confetti({
-        particleCount: 80,
-        spread: 60,
-        origin: { y: 0.6 },
-        colors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
-      });
-
-      // Staggered side bursts
-      setTimeout(() => {
-        confetti({
-          particleCount: 40,
-          angle: 60,
-          spread: 45,
-          origin: { x: 0.1, y: 0.8 },
-          colors: ['#3b82f6', '#10b981']
-        });
-      }, 150);
-
-      setTimeout(() => {
-        confetti({
-          particleCount: 40,
-          angle: 120,
-          spread: 45,
-          origin: { x: 0.9, y: 0.8 },
-          colors: ['#8b5cf6', '#ec4899']
-        });
-      }, 300);
+      // Confetti logic...
+      confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'] });
 
       await fetchProgress();
     } catch (err: any) {
@@ -164,8 +95,8 @@ const TasksPage: React.FC = () => {
         ...prev,
         {
           id: toastId,
-          title: "⚠️ Verification Paused",
-          message: err.message || "Failed to finalize mission points. Please try again.",
+          title: "⚠️ Claim Failed",
+          message: err.message || "Could not claim reward. Make sure the task is completed.",
           type: "error"
         }
       ]);

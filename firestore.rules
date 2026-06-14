@@ -24,12 +24,11 @@ service cloud.firestore {
     // ===============================================================
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow write: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
     }
 
     match /userTasks/{userTaskId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() && (userTaskId.startsWith(request.auth.uid + '_') || isAdmin());
+      allow read, write: if isSignedIn();
     }
 
     match /tasks/{taskId} {

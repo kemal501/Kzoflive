@@ -3,6 +3,7 @@ import { auth, db } from '../firebase';
 import { doc, runTransaction, serverTimestamp, collection, increment } from 'firebase/firestore';
 import { TASKS, getUserTasksProgress, UserTaskProgress, Task, updateTaskProgress, claimTaskReward } from '../services/taskService';
 import { TaskVerification } from '../components/TaskVerification';
+import { useHaptic } from '../hooks/useHaptics';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, Award, Coins, TrendingUp, Clock, Gift, UserPlus, LayoutGrid, Users, Cpu, Sparkles, Facebook, Youtube, Send, ExternalLink, HelpCircle, BookOpen } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -32,6 +33,8 @@ const formatDuration = (ms: number) => {
 };
 
 const TasksPage: React.FC = () => {
+  const hapticTap = useHaptic('light');
+  const hapticSuccess = useHaptic('medium');
   const [progress, setProgress] = useState<UserTaskProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [verifyingTaskId, setVerifyingTaskId] = useState<string | null>(null);
@@ -82,7 +85,7 @@ const TasksPage: React.FC = () => {
       setSuccessClaimedReward({ amount: reward, title: task.title });
       
       // Trigger success haptic notification
-      triggerNotification('success');
+      hapticSuccess();
 
       // Confetti logic...
       confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'] });
@@ -258,6 +261,7 @@ const TasksPage: React.FC = () => {
   }, [completedCount, totalTasksCount, loading, progress]);
 
   const handleTaskClick = (task: Task) => {
+    hapticTap();
     setConfirmTask(task);
     setIsTaskVerified(false);
   };

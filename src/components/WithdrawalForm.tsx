@@ -71,8 +71,8 @@ const WithdrawalForm: React.FC<Props> = ({ user }) => {
     setError(null);
     setSuccess(null);
 
-    if (amount < 5000) {
-      setError('Minimum withdrawal is 5,000 coins (50 USD).');
+    if (amount < 0.01) {
+      setError('Minimum withdrawal is 0.01 coins.');
       return;
     }
 
@@ -112,15 +112,15 @@ const WithdrawalForm: React.FC<Props> = ({ user }) => {
           amount,
           method,
           details,
-          status: 'completed', // Auto-complete for prototype
+          status: 'completed', // Auto-complete for instant prototype
           processedAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
         });
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, path);
       }
-      setSuccess('Withdrawal request submitted successfully.');
-      setAmount(5000);
+      setSuccess('Withdrawal request submitted successfully. Transfer should arrive in 5 seconds.');
+      setAmount(0.01);
       setDetails('');
     } catch (err) {
       console.error(err);
@@ -132,47 +132,44 @@ const WithdrawalForm: React.FC<Props> = ({ user }) => {
 
   return (
     <form onSubmit={handleSubmit} className="bg-slate-800 p-4 rounded-lg shadow-xl w-full max-w-md mt-8 text-white">
-      <h2 className="text-xl font-bold mb-4">Request Withdrawal</h2>
+      <h2 className="text-xl font-bold mb-4">Instant Withdrawal</h2>
       {error && <p className="text-red-500 mb-2">{error}</p>}
       {success && <p className="text-green-500 mb-2">{success}</p>}
-      <label className="block mb-2">Amount (min 5,000):</label>
+      <label className="block mb-2">Amount (min 0.01):</label>
       <input
         type="number"
         value={amount}
         onChange={(e) => setAmount(Number(e.target.value))}
         className="w-full p-2 mb-4 bg-slate-700 rounded text-white"
-        min={5000}
+        min={0.01}
+        step={0.01}
         disabled={isProcessing}
       />
-      <label className="block mb-2">Method:</label>
+      <label className="block mb-2">Wallet Method:</label>
       <select
         value={method}
         onChange={(e) => setMethod(e.target.value)}
         className="w-full p-2 mb-4 bg-slate-700 rounded text-white"
         disabled={isProcessing}
       >
-        <option value="Bank Transfer">Bank Transfer</option>
-        <option value="PayPal">PayPal</option>
-        <option value="Crypto">Crypto</option>
+        <option value="Crypto (USDT-TRC20)">Crypto (USDT-TRC20)</option>
+        <option value="Crypto (BTC)">Crypto (BTC)</option>
+        <option value="Crypto (ETH)">Crypto (ETH)</option>
       </select>
 
       <label className="block mb-2">
-        {method === 'Bank Transfer' ? 'Bank Details (Name, Account, Bank):' : 
-         method === 'PayPal' ? 'PayPal Email:' : 
-         'Wallet Address (USDT/TRC20):'}
+        Wallet Address:
       </label>
       <textarea
         value={details}
         onChange={(e) => setDetails(e.target.value)}
         className="w-full p-2 mb-4 bg-slate-700 rounded text-white h-20"
-        placeholder={method === 'Bank Transfer' ? 'John Doe, 12345678, Chase Bank' : 
-                     method === 'PayPal' ? 'example@email.com' : 
-                     'T...' }
+        placeholder={`Enter ${method} address here`}
         disabled={isProcessing}
       />
 
       <button type="submit" disabled={isProcessing} className="w-full bg-blue-600 p-2 rounded font-bold disabled:opacity-50">
-        {isProcessing ? 'Processing...' : 'Submit Request'}
+        {isProcessing ? 'Processing in 5s...' : 'Withdraw Instantly'}
       </button>
     </form>
   );

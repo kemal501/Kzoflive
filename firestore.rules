@@ -24,7 +24,7 @@ service cloud.firestore {
     // ===============================================================
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow write: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
+      allow write: if isSignedIn();
     }
 
     match /userTasks/{userTaskId} {

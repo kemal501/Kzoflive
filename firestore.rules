@@ -1,23 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ===============================================================
-    // Global Catch-All (Default Deny)
-    // ===============================================================
-    match /{document=**} {
-      allow read, write: if false;
-    }
 
     // ===============================================================
     // Helpers
     // ===============================================================
     function isSignedIn() {
       return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
     }
 
     function isAdmin() {
@@ -30,14 +19,9 @@ service cloud.firestore {
       );
     }
 
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
     // ===============================================================
     // Collection Specific Matches
     // ===============================================================
-
     match /users/{userId} {
       allow read: if isSignedIn();
       allow write: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
@@ -93,7 +77,6 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Modern Voice Room / Chat features
     match /voiceRooms/{roomId} {
       allow read: if true;
       allow create, update: if isSignedIn();
@@ -159,6 +142,13 @@ service cloud.firestore {
     match /fraud_reports/{reportId} {
       allow read, create: if isAdmin();
       allow update, delete: if false;
+    }
+
+    // ===============================================================
+    // Global Catch-All (Default Deny)
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
 import { doc, runTransaction, serverTimestamp, collection, increment } from 'firebase/firestore';
 import { TASKS, getUserTasksProgress, UserTaskProgress, Task, updateTaskProgress, claimTaskReward } from '../services/taskService';
+import { TaskVerification } from '../components/TaskVerification';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, Award, Coins, TrendingUp, Clock, Gift, UserPlus, LayoutGrid, Users, Cpu, Sparkles, Facebook, Youtube, Send, ExternalLink, HelpCircle, BookOpen } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -40,6 +41,7 @@ const TasksPage: React.FC = () => {
   const [notifiedTasks, setNotifiedTasks] = useState<Record<string, boolean>>({});
   const [toasts, setToasts] = useState<{ id: string; title: string; message: string; type?: 'warning' | 'success' | 'error' | 'info' }[]>([]);
   const [confirmTask, setConfirmTask] = useState<Task | null>(null);
+  const [isTaskVerified, setIsTaskVerified] = useState(false);
   const [isHowToEarnOpen, setIsHowToEarnOpen] = useState(false);
   const [successClaimedReward, setSuccessClaimedReward] = useState<{ amount: number; title: string } | null>(null);
   
@@ -257,6 +259,7 @@ const TasksPage: React.FC = () => {
 
   const handleTaskClick = (task: Task) => {
     setConfirmTask(task);
+    setIsTaskVerified(false);
   };
 
   const executeTaskAction = async (task: Task) => {
@@ -992,6 +995,17 @@ const TasksPage: React.FC = () => {
                   : "You'll be directed to the social platform. Make sure to complete the follow/subscribe or join requirements, then return here and click 'Verify' to claim your reward."}
               </p>
 
+              {/* Task Verification */}
+              <div className="mb-6">
+                <TaskVerification 
+                  task={confirmTask} 
+                  userId={auth.currentUser?.uid || ''}
+                  onVerified={(verified) => {
+                    setIsTaskVerified(verified);
+                  }}
+                />
+              </div>
+
               {/* Action Buttons */}
               <div className="flex items-center gap-3 w-full">
                 <button
@@ -1004,7 +1018,8 @@ const TasksPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => executeTaskAction(confirmTask)}
-                  className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-extrabold text-xs transition duration-150 active:scale-95 shadow-lg shadow-blue-500/15 cursor-pointer uppercase tracking-wider animate-pulse"
+                  disabled={!isTaskVerified}
+                  className={`flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-extrabold text-xs transition duration-150 active:scale-95 shadow-lg shadow-blue-500/15 cursor-pointer uppercase tracking-wider ${!isTaskVerified ? 'opacity-50 cursor-not-allowed' : 'animate-pulse'}`}
                 >
                   {confirmTask.type === 'watched_ad' ? 'Launch Ad' : 'Yes, Proceed'}
                 </button>

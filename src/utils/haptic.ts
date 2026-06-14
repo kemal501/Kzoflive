@@ -14,7 +14,17 @@ interface TelegramWindow extends Window {
   };
 }
 
+const isHapticEnabled = (): boolean => {
+  try {
+    const val = localStorage.getItem('haptics_enabled');
+    return val === null ? true : val === 'true';
+  } catch {
+    return true;
+  }
+};
+
 export const triggerImpact = (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' = 'medium') => {
+  if (!isHapticEnabled()) return;
   try {
     const tgWindow = window as unknown as TelegramWindow;
     const haptic = tgWindow.Telegram?.WebApp?.HapticFeedback;
@@ -27,6 +37,7 @@ export const triggerImpact = (style: 'light' | 'medium' | 'heavy' | 'rigid' | 's
 };
 
 export const triggerNotification = (type: 'success' | 'warning' | 'error') => {
+  if (!isHapticEnabled()) return;
   try {
     const tgWindow = window as unknown as TelegramWindow;
     const haptic = tgWindow.Telegram?.WebApp?.HapticFeedback;
@@ -39,6 +50,7 @@ export const triggerNotification = (type: 'success' | 'warning' | 'error') => {
 };
 
 export const triggerSelectionChange = () => {
+  if (!isHapticEnabled()) return;
   try {
     const tgWindow = window as unknown as TelegramWindow;
     const haptic = tgWindow.Telegram?.WebApp?.HapticFeedback;

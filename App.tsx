@@ -5,19 +5,21 @@ import {
   Award, Users, Wallet, Receipt, Zap, 
   Coins, LogOut, User as UserIcon, 
   Copy, RefreshCw, Check, 
-  ChevronRight, Play, Trophy, Tv, Settings, Share2
+  ChevronRight, Play, Trophy, Tv, Settings, Share2,
+  AlertTriangle, ExternalLink
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { auth, db, googleProvider } from './src/firebase';
 import { signInWithPopup, signOut, signInAnonymously } from 'firebase/auth';
 import { createUserProfile, getUserProfile, User, trackReferralClick } from './src/services/userService';
-import { doc, updateDoc, increment, addDoc, collection, getDocs, onSnapshot } from 'firebase/firestore';
+import { doc, updateDoc, increment, addDoc, collection, getDocs, onSnapshot, runTransaction } from 'firebase/firestore';
 import TasksPage from './src/pages/TasksPage';
 import WithdrawalPage from './src/pages/WithdrawalPage';
 import AdminPanel from './src/components/AdminPanel';
 import { CountUp } from './src/components/CountUp';
 import { secureCheckin, secureAdReward } from './src/services/apiService';
 import { generateFingerprint, captureClientInfo } from './src/utils/fingerprint';
+import { triggerImpact, triggerNotification, triggerSelectionChange } from './src/utils/haptic';
 import { Bell } from 'lucide-react';
 
 function AppContent() {
@@ -27,6 +29,9 @@ function AppContent() {
   const [telegramUser, setTelegramUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'home' | 'tasks' | 'watch' | 'refer' | 'leaderboard' | 'wallet' | 'ledger' | 'settings' | 'admin'>('home');
   const [copied, setCopied] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDomainConfigModal, setShowDomainConfigModal] = useState(false);
+  const [copiedDomain, setCopiedDomain] = useState<string | null>(null);
   
   // App Stats
   const [isDailyClaiming, setIsDailyClaiming] = useState(false);
@@ -45,8 +50,33 @@ function AppContent() {
 
   // User Customizer Options states
   const [selectedLang, setSelectedLang] = useState<'en' | 'am' | 'om'>('en');
-  const [hapticsOn, setHapticsOn] = useState(true);
+  const [hapticsOn, setHapticsOn] = useState<boolean>(() => {
+    try {
+      const val = localStorage.getItem('haptics_enabled');
+      return val === null ? true : val === 'true';
+    } catch {
+      return true;
+    }
+  });
   const [audioOn, setAudioOn] = useState(true);
+
+  // Daily Streak Goal computations
+  const dailyGoalTasksCount = user?.dailyGoalTasksCompleted || 0;
+  const dailyGoalAdsCount = user?.dailyGoalAdsCompleted || 0;
+  const dailyGoalTotalCompleted = dailyGoalTasksCount + dailyGoalAdsCount;
+  const dailyGoalTarget = 2;
+  const dailyGoalProgressPct = Math.min((dailyGoalTotalCompleted / dailyGoalTarget) * 100, 100);
+  const dailyGoalRemainingNeeded = Math.max(dailyGoalTarget - dailyGoalTotalCompleted, 0);
+  const dailyGoalActiveStreak = user?.dailyGoalStreakCount || 0;
+  const dailyGoalIsClaimedToday = user?.dailyGoalClaimedToday || false;
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('haptics_enabled', String(hapticsOn));
+    } catch (e) {
+      console.warn('Failed to write haptics settings to localStorage', e);
+    }
+  }, [hapticsOn]);
 
   // Notifications State Management
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -174,6 +204,55 @@ function AppContent() {
     return () => unsub();
   }, [firebaseUser]);
 
+  // Real-time current user document synchronizer
+  useEffect(() => {
+    if (!firebaseUser) return;
+    const userRef = doc(db, 'users', firebaseUser.uid);
+    const unsub = onSnapshot(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setUser(snapshot.data() as User);
+      }
+    }, (err) => {
+      console.warn("User document sync error:", err);
+    });
+    return () => unsub();
+  }, [firebaseUser]);
+
+  // Auto-reset daily goal and streak calculations when day shifts
+  useEffect(() => {
+    if (!firebaseUser || !user || user.isSimulated) return;
+
+    const todayStr = new Date().toDateString(); // e.g., "Sun Jun 14 2026"
+    
+    if (user.dailyGoalLastResetDate !== todayStr) {
+      // Determine if a streak was active yesterday or if it's a cold restart
+      let nextStreak = user.dailyGoalStreakCount || 0;
+      
+      // If last reset date exists and was not yesterday, reset streak
+      if (user.dailyGoalLastResetDate) {
+        const lastReset = new Date(user.dailyGoalLastResetDate);
+        const today = new Date(todayStr);
+        const diffTime = Math.abs(today.getTime() - lastReset.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 1) {
+          nextStreak = 0; // streak broken
+        }
+      }
+
+      // Reset goals atomically
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      updateDoc(userRef, {
+        dailyGoalTasksCompleted: 0,
+        dailyGoalAdsCompleted: 0,
+        dailyGoalClaimedToday: false,
+        dailyGoalLastResetDate: todayStr,
+        dailyGoalStreakCount: nextStreak
+      }).catch(err => {
+        console.warn("Could not save daily goal resets to Firestore database:", err);
+      });
+    }
+  }, [firebaseUser, user]);
+
   // Sync and calculate top referrers leaderboard
   useEffect(() => {
     if (!firebaseUser) return;
@@ -231,6 +310,38 @@ function AppContent() {
       await signInWithPopup(auth, googleProvider);
     } catch (err: any) {
       console.error("Google auth failed:", err);
+      const isDomainError = err.code === 'auth/unauthorized-domain' || 
+                            err.message?.includes('unauthorized-domain') || 
+                            err.message?.includes('auth/unauthorized-domain');
+      if (isDomainError) {
+        setShowDomainConfigModal(true);
+        triggerNotification('error');
+      } else {
+        alert("Google sign-in error: " + (err.message || String(err)));
+      }
+    }
+  };
+
+  // Helper method to bypass domain constraints during testing on random sandbox host URLs
+  const handleDemoSessionLogin = async () => {
+    try {
+      triggerImpact('medium');
+      await signInAnonymously(auth);
+      setShowDomainConfigModal(false);
+      triggerNotification('success');
+    } catch (err: any) {
+      console.warn("Anonymous registration is also disabled in your Firebase console. Custom virtual profile loaded instead:", err);
+      // Construct a premium virtual state so components can render and interact safely
+      setFirebaseUser({
+        uid: 'simulated_tester_99',
+        email: 'kemalziyad4@gmail.com',
+        displayName: 'Simulated Developer',
+        photoURL: null,
+        isSimulated: true
+      });
+      setShowDomainConfigModal(false);
+      triggerNotification('success');
+      alert("Virtual Simulation Mode Enabled! We created a local profile so you can explore active dashboards smoothly with offline features.");
     }
   };
 
@@ -301,11 +412,14 @@ function AppContent() {
 
         alert("Invitation code applied successfully! +5,000 $FISH added.");
         setSimRefCode('');
+        triggerNotification('success');
         fetchUserProfile(firebaseUser.uid);
       } else {
+        triggerNotification('error');
         alert("Invitation code not found in Oibb database.");
       }
     } catch (error: any) {
+      triggerNotification('error');
       alert("Error applying referrer: " + error.message);
     }
   };
@@ -314,11 +428,14 @@ function AppContent() {
   const handleCheckin = async () => {
     if (!firebaseUser) return;
     setIsDailyClaiming(true);
+    triggerImpact('medium');
     try {
       await secureCheckin();
+      triggerNotification('success');
       alert(`Congratulations! You have successfully claimed today's Check-In Bonus of 15,000 $FISH!`);
       fetchUserProfile(firebaseUser.uid);
     } catch (error: any) {
+      triggerNotification('error');
       alert("Claiming daily reward failed: " + error.message);
     } finally {
       setIsDailyClaiming(false);
@@ -341,17 +458,106 @@ function AppContent() {
       alert(`Ad completed! You earned ${response.reward?.toLocaleString() || '5,000'} $FISH successfully.`);
       fetchUserProfile(firebaseUser.uid);
     } catch (err: any) {
-      alert("Failed to reward: " + err.message);
+      if (user?.isSimulated) {
+        setUser(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            coins: (prev.coins || 0) + 5000,
+            dailyGoalAdsCompleted: (prev.dailyGoalAdsCompleted || 0) + 1
+          };
+        });
+        alert("Virtual simulation mode active: +5,000 $FISH and +1 Daily Goal ad complete successfully simulated!");
+      } else {
+        alert("Failed to reward: " + err.message);
+      }
     } finally {
       setWatchingAd(false);
     }
   };
 
+  // Claim Daily Streak/Activity Goal bonus (+10,000 FISH)
+  const [claimingDailyGoal, setClaimingDailyGoal] = useState(false);
+  const handleClaimDailyGoalBonus = async () => {
+    if (!user) return;
+    setClaimingDailyGoal(true);
+    triggerImpact('heavy');
+
+    const reward = 10000;
+    const todayStr = new Date().toDateString();
+
+    try {
+      if (firebaseUser && !user.isSimulated) {
+        const userRef = doc(db, 'users', firebaseUser.uid);
+        const ledgerRef = doc(collection(db, 'coinTransactions'));
+        const nextCoins = (user.coins || 0) + reward;
+        const nextStreak = (user.dailyGoalStreakCount || 0) + 1;
+
+        await runTransaction(db, async (transaction: any) => {
+          transaction.update(userRef, {
+            coins: nextCoins,
+            dailyGoalClaimedToday: true,
+            dailyGoalStreakCount: nextStreak,
+            dailyGoalLastResetDate: todayStr
+          });
+
+          transaction.set(ledgerRef, {
+            userId: firebaseUser.uid,
+            amount: reward,
+            type: 'daily_streak_bonus',
+            description: `Claimed Daily Activity Streak Bonus (+${reward.toLocaleString()} $FISH)`,
+            createdAt: new Date().toISOString()
+          });
+        });
+
+        // Trigger real notification in Firestore
+        await addDoc(collection(db, 'notifications'), {
+          userId: firebaseUser.uid,
+          title: 'Daily Goal Streak Unlocked! 🔥',
+          message: `Claimed +10,000 $FISH for completing daily activity target! Active streak: ${nextStreak} days.`,
+          type: 'reward',
+          read: false,
+          createdAt: new Date().toISOString()
+        });
+
+      } else {
+        // Simulated local fallback
+        setUser(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            coins: (prev.coins || 0) + reward,
+            dailyGoalClaimedToday: true,
+            dailyGoalStreakCount: (prev.dailyGoalStreakCount || 0) + 1,
+            dailyGoalLastResetDate: todayStr
+          };
+        });
+      }
+
+      // Celebrations
+      triggerNotification('success');
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#ffc107', '#ff5722', '#3b82f6', '#4caf50']
+      });
+
+      alert(`Success! You have claimed today's Daily Activity Streak Bonus of +10,000 $FISH! Active streak: ${(user.dailyGoalStreakCount || 0) + 1} days 🔥`);
+    } catch (err: any) {
+      console.error("Failed to claim daily goal bonus:", err);
+      alert("Error claiming daily activity bonus: " + err.message);
+    } finally {
+      setClaimingDailyGoal(false);
+    }
+  };
+
   const copyReferralLink = () => {
     if (!user) return;
-    const refLink = `${window.location.origin}/?startapp=${user.referralCode}`;
+    const refLink = `https://t.me/BarcaearnBot?start=${user.referralCode}`;
     navigator.clipboard.writeText(refLink);
     setCopied(true);
+    triggerNotification('success');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -619,6 +825,113 @@ function AppContent() {
                     <span>Claim Daily Bonus (+15,000 FISH)</span>
                   </button>
 
+                  {/* DAILY ACTIVITY GOAL TRACKER CARD */}
+                  <div className="bg-slate-900 border border-slate-800/80 rounded-3xl p-5 shadow-lg space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2.5 bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/20 text-amber-400 rounded-xl">
+                          <Award size={22} className={dailyGoalActiveStreak > 0 ? "animate-pulse" : ""} />
+                        </div>
+                        <div className="text-left">
+                          <h4 className="text-sm font-black text-white flex items-center gap-1.5">
+                            <span>Daily Streak Goal</span>
+                            <span className="text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded uppercase font-bold">
+                              +10,000 FISH
+                            </span>
+                          </h4>
+                          <p className="text-xs text-slate-400 mt-1 pb-0.5 text-left">
+                            Complete any 2 actions (ads or tasks) to win a secondary streak bonus!
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 rounded-xl px-2 py-1 text-amber-400">
+                          <span className="text-xs text-yellow-500">🔥</span>
+                          <span className="text-xs font-black font-mono">{dailyGoalActiveStreak}d</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Progress tracker metrics */}
+                    <div className="bg-slate-950/50 border border-slate-800/60 rounded-2xl p-4 space-y-3.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400">Completed Actions</span>
+                        <span className="font-mono font-bold text-white">
+                          {dailyGoalTotalCompleted} / {dailyGoalTarget} Goals
+                        </span>
+                      </div>
+
+                      {/* Progress bar container */}
+                      <div className="relative w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <motion.div
+                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-400 via-yellow-500 to-emerald-400 rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${dailyGoalProgressPct}%` }}
+                          transition={{ duration: 0.5 }}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] text-left">
+                        <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-2 flex flex-col">
+                          <span className="text-slate-500 font-medium">Tasks Logged</span>
+                          <span className="text-white font-mono font-black mt-0.5 text-xs">{dailyGoalTasksCount}</span>
+                        </div>
+                        <div className="bg-slate-900/60 border border-slate-800/40 rounded-xl p-2 flex flex-col">
+                          <span className="text-slate-500 font-medium font-sans">Ads Streamed</span>
+                          <span className="text-white font-mono font-black mt-0.5 text-xs">{dailyGoalAdsCount}</span>
+                        </div>
+                      </div>
+
+                      <div className="text-center pt-1">
+                        {dailyGoalIsClaimedToday ? (
+                          <p className="text-emerald-400 text-[11px] font-bold flex items-center justify-center gap-1.5 animate-bounce">
+                            <span>🎉 Streak Bonus Unlocked & Claimed Today!</span>
+                          </p>
+                        ) : dailyGoalRemainingNeeded > 0 ? (
+                          <p className="text-slate-400 text-[11px]">
+                            Perform <strong className="text-amber-400">{dailyGoalRemainingNeeded}</strong> more action{dailyGoalRemainingNeeded > 1 ? 's' : ''} to unleash!
+                          </p>
+                        ) : (
+                          <p className="text-emerald-400 text-[11px] font-bold animate-pulse">
+                            Target achieved! Claim your streak bonus now!
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action button */}
+                    {dailyGoalIsClaimedToday ? (
+                      <div className="w-full bg-slate-950 border border-slate-800/80 p-3 rounded-2xl text-center text-slate-500 font-black text-xs uppercase tracking-wider">
+                        🎯 Reward Claimed & Streak Saved
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={dailyGoalRemainingNeeded > 0 || claimingDailyGoal}
+                        onClick={handleClaimDailyGoalBonus}
+                        className={`w-full py-3.5 px-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all duration-150 shadow-md ${
+                          dailyGoalRemainingNeeded === 0
+                            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white cursor-pointer hover:shadow-emerald-500/10 hover:scale-[1.01] active:scale-95'
+                            : 'bg-slate-950 border border-slate-800/60 text-slate-500 cursor-not-allowed'
+                        }`}
+                      >
+                        {claimingDailyGoal ? (
+                          <div className="flex items-center justify-center gap-2">
+                             <RefreshCw size={14} className="animate-spin text-white" />
+                             <span>Unleashing Bonus...</span>
+                          </div>
+                        ) : dailyGoalRemainingNeeded > 0 ? (
+                          <span>Goal progress incomplete ({dailyGoalTotalCompleted}/2)</span>
+                        ) : (
+                          <span className="flex items-center justify-center gap-1.5">
+                            Claim Daily Streak Bonus (+10,000 FISH) <Trophy size={11} className="animate-bounce" />
+                          </span>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
                   {/* AD WRAPPER PANEL */}
                   <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
                     <div className="flex items-start gap-3">
@@ -877,8 +1190,11 @@ function AppContent() {
                     </div>
 
                     <button 
-                      onClick={() => signOut(auth)}
-                      className="text-[10px] font-bold text-rose-400 hover:text-red-300 flex items-center gap-1 uppercase"
+                      onClick={() => {
+                        triggerImpact('medium');
+                        setShowLogoutConfirm(true);
+                      }}
+                      className="text-[10px] font-bold text-rose-400 hover:text-red-350 flex items-center gap-1 uppercase transition-colors"
                     >
                       <LogOut size={12} />
                       <span>Log out</span>
@@ -1059,7 +1375,7 @@ function AppContent() {
                       />
                       <button
                         onClick={() => {
-                          const refLink = user?.referralCode ? `${window.location.origin}/?startapp=${user.referralCode}` : 'OIBB-EARN';
+                          const refLink = user?.referralCode ? `https://t.me/BarcaearnBot?start=${user.referralCode}` : 'OIBB-EARN';
                           navigator.clipboard.writeText(refLink);
                           setCopied(true);
                           setTimeout(() => setCopied(false), 2000);
@@ -1076,8 +1392,8 @@ function AppContent() {
 
                     <button
                       onClick={() => {
-                        const refLink = user?.referralCode ? `${window.location.origin}/?startapp=${user.referralCode}` : 'OIBB-EARN';
-                        const tgText = `🚀 Join FishVerse Clone (Oibb Earn) to complete social tasks and convert FISH to USDT instantly. My invite referral link: ${refLink}`;
+                        const refLink = user?.referralCode ? `https://t.me/BarcaearnBot?start=${user.referralCode}` : 'OIBB-EARN';
+                        const tgText = `🚀 Join Barca Earn to complete social tasks and convert FISH to USDT instantly. My invite referral link: ${refLink}`;
                         window.open(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(tgText)}`, '_blank');
                         if (hapticsOn) {
                           const tg = (window as any).Telegram?.WebApp;
@@ -1441,10 +1757,7 @@ function AppContent() {
           <footer className="absolute bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-800/80 px-1 py-2 grid grid-cols-6 gap-0.5 shadow-2xl backdrop-blur-md z-45">
             <button 
               onClick={() => {
-                if (hapticsOn) {
-                  const tg = (window as any).Telegram?.WebApp;
-                  tg?.HapticFeedback?.impactOccurred('light');
-                }
+                triggerSelectionChange();
                 setActiveTab('home');
               }}
               className={`flex flex-col items-center justify-center gap-1 transition-colors py-1 ${activeTab === 'home' ? 'text-blue-400 font-extrabold' : 'text-slate-400 hover:text-slate-100'}`}
@@ -1455,10 +1768,7 @@ function AppContent() {
 
             <button 
               onClick={() => {
-                if (hapticsOn) {
-                  const tg = (window as any).Telegram?.WebApp;
-                  tg?.HapticFeedback?.impactOccurred('light');
-                }
+                triggerSelectionChange();
                 setActiveTab('tasks');
               }}
               className={`flex flex-col items-center justify-center gap-1 transition-colors py-1 ${activeTab === 'tasks' ? 'text-blue-400 font-extrabold' : 'text-slate-400 hover:text-slate-100'}`}
@@ -1469,10 +1779,7 @@ function AppContent() {
 
             <button 
               onClick={() => {
-                if (hapticsOn) {
-                  const tg = (window as any).Telegram?.WebApp;
-                  tg?.HapticFeedback?.impactOccurred('light');
-                }
+                triggerSelectionChange();
                 setActiveTab('watch');
               }}
               className={`flex flex-col items-center justify-center gap-1 transition-colors py-1 ${activeTab === 'watch' ? 'text-red-400 font-extrabold' : 'text-slate-400 hover:text-slate-100'}`}
@@ -1483,10 +1790,7 @@ function AppContent() {
 
             <button 
               onClick={() => {
-                if (hapticsOn) {
-                  const tg = (window as any).Telegram?.WebApp;
-                  tg?.HapticFeedback?.impactOccurred('light');
-                }
+                triggerSelectionChange();
                 setActiveTab('refer');
               }}
               className={`flex flex-col items-center justify-center gap-1 transition-colors py-1 ${activeTab === 'refer' ? 'text-blue-400 font-extrabold' : 'text-slate-400 hover:text-slate-100'}`}
@@ -1497,10 +1801,7 @@ function AppContent() {
 
             <button 
               onClick={() => {
-                if (hapticsOn) {
-                  const tg = (window as any).Telegram?.WebApp;
-                  tg?.HapticFeedback?.impactOccurred('light');
-                }
+                triggerSelectionChange();
                 setActiveTab('wallet');
               }}
               className={`flex flex-col items-center justify-center gap-1 transition-colors py-1 ${activeTab === 'wallet' ? 'text-blue-400 font-extrabold' : 'text-slate-400 hover:text-slate-100'}`}
@@ -1511,10 +1812,7 @@ function AppContent() {
 
             <button 
               onClick={() => {
-                if (hapticsOn) {
-                  const tg = (window as any).Telegram?.WebApp;
-                  tg?.HapticFeedback?.impactOccurred('light');
-                }
+                triggerSelectionChange();
                 // If they are an admin, clicking more can immediately show settings but with an admin floating link
                 setActiveTab('settings');
               }}
@@ -1525,6 +1823,185 @@ function AppContent() {
             </button>
           </footer>
         )}
+
+        {/* Custom Logout Confirmation Modal */}
+        <AnimatePresence>
+          {showLogoutConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 font-sans"
+            >
+              <motion.div
+                initial={{ scale: 0.95, y: 20, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.95, y: 20, opacity: 0 }}
+                transition={{ type: "spring", duration: 0.4 }}
+                className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl max-w-sm w-full relative overflow-hidden"
+              >
+                {/* Top gradient highlight strip */}
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 via-rose-500 to-orange-500" />
+                
+                <div className="space-y-6 pt-2">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-rose-500/15 text-rose-400 border border-rose-500/20 rounded-2xl">
+                      <LogOut size={24} className="animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Sign Out</h3>
+                      <p className="text-xs text-slate-400">Confirm you want to log out of your session.</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950 border border-slate-800/60 rounded-2xl p-4 space-y-3">
+                    <p className="text-xs text-slate-300 leading-normal">
+                      You'll need to authenticate again using Google or Telegram credentials to access your balance, active referral campaigns, and tasks.
+                    </p>
+                  </div>
+
+                  {/* Confirm & Cancel Actions */}
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerImpact('light');
+                        setShowLogoutConfirm(false);
+                      }}
+                      className="py-3 px-4 rounded-xl border border-slate-800 text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white hover:bg-slate-800/40 transition-all cursor-pointer text-center"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerNotification('success');
+                        setShowLogoutConfirm(false);
+                        signOut(auth);
+                      }}
+                      className="py-3 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-red-500/10 transition-transform active:scale-95 cursor-pointer text-center"
+                    >
+                      Log Out
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Custom Firebase Domain Alignment Dialog */}
+        <AnimatePresence>
+          {showDomainConfigModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-55 flex items-center justify-center p-4 overflow-y-auto font-sans"
+            >
+              <motion.div
+                initial={{ scale: 0.95, y: 20, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.95, y: 20, opacity: 0 }}
+                transition={{ type: "spring", duration: 0.4 }}
+                className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl max-w-md w-full relative overflow-hidden my-8"
+              >
+                {/* Top dynamic status line */}
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-[#2481cc] to-indigo-600" />
+                
+                <div className="space-y-5 pt-2">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-2xl">
+                      <AlertTriangle size={24} className="animate-bounce" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black text-white">Domain Authorization Needed</h3>
+                      <p className="text-[11px] text-slate-400">Firebase has blocked the Google OAuth flow because this sandbox host URL is unregistered.</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950/85 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                    <span className="text-[10px] font-black tracking-widest text-[#2481cc] uppercase font-mono">1-Minute Quick Resolution:</span>
+                    <ol className="text-[11.5px] text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
+                      <li>
+                        Open your <a 
+                          href="https://console.firebase.google.com/project/application-creation-71a9e/authentication/providers" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-blue-400 hover:text-blue-350 underline inline-flex items-center gap-0.5 font-bold"
+                        >
+                          Firebase Console Auth settings <ExternalLink size={10} />
+                        </a>
+                      </li>
+                      <li>Select the <strong className="text-white">Settings</strong> tab at the top.</li>
+                      <li>Click <strong className="text-white">Authorized domains</strong> in the sidebar.</li>
+                      <li>Click <strong className="text-white">Add domain</strong> and add both host URLs listed below:</li>
+                    </ol>
+                  </div>
+
+                  <div className="space-y-2">
+                    <span className="text-[9px] font-black uppercase text-slate-400 font-mono tracking-wider">Domains to register in Firebase:</span>
+                    {[
+                      'ais-dev-xg2iazg43p27ayvfndt54m-132519772023.europe-west3.run.app',
+                      'ais-pre-xg2iazg43p27ayvfndt54m-132519772023.europe-west3.run.app'
+                    ].map((domain) => (
+                      <div key={domain} className="flex items-center justify-between bg-slate-950 border border-slate-800/60 rounded-xl px-3 py-2">
+                        <span className="font-mono text-[10px] text-slate-355 select-all overflow-hidden text-ellipsis mr-2">{domain}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(domain);
+                            setCopiedDomain(domain);
+                            triggerNotification('success');
+                            setTimeout(() => setCopiedDomain(null), 2000);
+                          }}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all border ${
+                            copiedDomain === domain 
+                              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                              : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                          }`}
+                        >
+                          {copiedDomain === domain ? (
+                            <>
+                              <Check size={9} />
+                              <span>Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={9} />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Actions buttons */}
+                  <div className="flex flex-col gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleDemoSessionLogin}
+                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-500 via-[#2481cc] to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-blue-500/10 transition-transform active:scale-95 cursor-pointer text-center"
+                    >
+                      Bypass & Start Simulated App Session
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerImpact('light');
+                        setShowDomainConfigModal(false);
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl border border-slate-800 text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white hover:bg-slate-800/40 transition-all cursor-pointer text-center"
+                    >
+                      Close Instructions
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>

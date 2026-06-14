@@ -1,10 +1,11 @@
 {
-  "projectId": "subtle-hydra-470016-c1",
-  "appId": "1:741086701624:web:ec6efbddce715cca289ecd",
-  "apiKey": "AIzaSyDyI3HszMP2LC5cBLghlaqJL2Xq6AW5BrQ",
-  "authDomain": "subtle-hydra-470016-c1.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-d8233174-8dc4-459d-aba1-9aaaadd1c877",
-  "storageBucket": "subtle-hydra-470016-c1.firebasestorage.app",
-  "messagingSenderId": "741086701624",
-  "measurementId": ""
+  "projectId": "application-creation-71a9e",
+  "appId": "1:705808831621:web:f944ce84bb0fbbb6e845ec",
+  "apiKey": "AIzaSyBIqiyv8RdDsoiyfO9FVDb8Uj3wp26g7DY",
+  "authDomain": "application-creation-71a9e.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "application-creation-71a9e.firebasestorage.app",
+  "messagingSenderId": "705808831621",
+  "measurementId": "G-FWLDEJKKGZ",
+  "databaseURL": "https://application-creation-71a9e-default-rtdb.firebaseio.com"
 }

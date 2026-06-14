@@ -86,6 +86,14 @@ export interface User {
   // Visual referral performance breakdown metrics
   referralClicks?: number;
   referralSignups?: number;
+
+  // Daily Goal Tracker fields
+  dailyGoalTasksCompleted?: number;
+  dailyGoalAdsCompleted?: number;
+  dailyGoalLastResetDate?: string;
+  dailyGoalStreakCount?: number;
+  dailyGoalClaimedToday?: boolean;
+  isSimulated?: boolean;
 }
 
 export const createUserProfile = async (user: User, referralCode?: string) => {

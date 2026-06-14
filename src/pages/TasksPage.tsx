@@ -104,7 +104,8 @@ const TasksPage: React.FC = () => {
 
         // Add reward coins to user's profile
         transaction.update(userRef, {
-          coins: increment(task.reward)
+          coins: increment(task.reward),
+          dailyGoalTasksCompleted: increment(1)
         });
 
         // Record the transaction in the coinTransactions collection ledger
@@ -1371,7 +1372,8 @@ const TasksPage: React.FC = () => {
                                     const userSnap = await trans.get(userRef);
                                     if (userSnap.exists()) {
                                       trans.update(userRef, {
-                                        coins: increment(payout)
+                                        coins: increment(payout),
+                                        dailyGoalTasksCompleted: increment(1)
                                       });
                                       const logRef = doc(collection(db, 'coinTransactions'));
                                       trans.set(logRef, {

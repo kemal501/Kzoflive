@@ -316,7 +316,8 @@ router.post('/ad-reward', verifyJWT, async (req, res) => {
         coins: (userData.coins || 0) + reward,
         balance: (userData.balance || 0) + reward,
         totalEarned: (userData.totalEarned || 0) + reward,
-        lastAdWatch: now.toISOString()
+        lastAdWatch: now.toISOString(),
+        dailyGoalAdsCompleted: (userData.dailyGoalAdsCompleted || 0) + 1
       });
 
       // Write ledger log

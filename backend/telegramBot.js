@@ -188,7 +188,7 @@ async function handleTelegramMessage(token, message) {
         { text: '🚀 Play Barca Earn MiniApp', web_app: { url: appUrl } }
       ],
       [
-        { text: '👥 Invite Friends', url: `https://t.me/share/url?url=https://t.me/${message.via_bot?.username || 'BarcaEarnBot'}?start=${user.referralCode}&text=Get%2025,000%20%24FISH%20immediately%20by%20joining%20Barca%20Earn%20MiniApp!%20⚽️🪙` },
+        { text: '👥 Invite Friends', url: `https://t.me/share/url?url=https://t.me/${message.via_bot?.username || 'BarcaearnBot'}?start=${user.referralCode}&text=Get%2025,000%20%24FISH%20immediately%20by%20joining%20Barca%20Earn%20MiniApp!%20⚽️🪙` },
         { text: '📢 Community Channel', url: 'https://t.me/oibbofficial' }
       ]
     ];

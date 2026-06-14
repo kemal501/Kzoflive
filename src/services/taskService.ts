@@ -17,7 +17,7 @@ export interface Task {
   reward: number; // Reward in FISH/Coins
   type: 'daily_login' | 'stream_duration' | 'send_gifts' | 'follow_users' | 'facebook_share' | 'youtube_watch' | 'telegram_join' | 'twitter_follow' | 'instagram_follow' | 'website_visit' | 'youtube_sub' | 'app_install' | 'watched_ad';
   goal: number;
-  category: 'Social' | 'Technical' | 'Creator' | 'Ads';
+  category: 'Social' | 'Gaming' | 'Finance';
   url?: string;
   isTimeSensitive?: boolean;
   durationMinutes?: number;
@@ -40,7 +40,7 @@ export const TASKS: Task[] = [
     reward: 5000,
     type: 'daily_login',
     goal: 1,
-    category: 'Technical'
+    category: 'Finance'
   },
   {
     id: 'fb_share_oroo',
@@ -59,7 +59,7 @@ export const TASKS: Task[] = [
     reward: 25000,
     type: 'youtube_watch',
     goal: 1,
-    category: 'Creator',
+    category: 'Gaming',
     url: 'https://youtu.be/lY4cEEiVBYA?si=dcPA07CWR2K4fuCF',
     isTimeSensitive: true,
     durationMinutes: 125
@@ -123,7 +123,7 @@ export const TASKS: Task[] = [
     reward: 7000,
     type: 'website_visit',
     goal: 1,
-    category: 'Technical',
+    category: 'Finance',
     url: 'https://barcapartner-marketplace.io',
     isTimeSensitive: true,
     durationMinutes: 90
@@ -135,7 +135,7 @@ export const TASKS: Task[] = [
     reward: 11000,
     type: 'youtube_sub',
     goal: 1,
-    category: 'Creator',
+    category: 'Gaming',
     url: 'https://youtube.com/c/barca_clone_official'
   },
   {
@@ -145,7 +145,7 @@ export const TASKS: Task[] = [
     reward: 25000,
     type: 'app_install',
     goal: 1,
-    category: 'Technical',
+    category: 'Gaming',
     url: 'https://play.google.com/store/apps/details?id=com.barcasponsor.game'
   },
   {
@@ -155,7 +155,7 @@ export const TASKS: Task[] = [
     reward: 1000,
     type: 'watched_ad',
     goal: 1,
-    category: 'Ads',
+    category: 'Finance',
     isTimeSensitive: true,
     durationMinutes: 240
   },
@@ -166,7 +166,7 @@ export const TASKS: Task[] = [
     reward: 15000,
     type: 'stream_duration',
     goal: 600, // 600 seconds = 10 minutes
-    category: 'Creator'
+    category: 'Gaming'
   },
   {
     id: 'send_5_gifts',

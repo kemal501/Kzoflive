@@ -34,7 +34,7 @@ const TasksPage: React.FC = () => {
   const [progress, setProgress] = useState<UserTaskProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [verifyingTaskId, setVerifyingTaskId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<'All' | 'Social' | 'Technical' | 'Creator' | 'Offerwalls'>('All');
+  const [selectedCategory, setSelectedCategory] = useState<'All' | 'Social' | 'Gaming' | 'Finance'>('All');
   
   const [timeRemaining, setTimeRemaining] = useState<Record<string, number>>({});
   const [notifiedTasks, setNotifiedTasks] = useState<Record<string, boolean>>({});
@@ -414,14 +414,12 @@ const TasksPage: React.FC = () => {
   const FILTER_CATEGORIES = [
     { id: 'All', name: 'All', icon: LayoutGrid },
     { id: 'Social', name: 'Social', icon: Users },
-    { id: 'Technical', name: 'Technical', icon: Cpu },
-    { id: 'Creator', name: 'Creator', icon: Sparkles },
-    { id: 'Offerwalls', name: 'Offerwalls', icon: Award }
+    { id: 'Gaming', name: 'Gaming', icon: Cpu },
+    { id: 'Finance', name: 'Finance', icon: Coins }
   ] as const;
 
   const getCategoryCount = (category: string) => {
     if (category === 'All') return TASKS.length;
-    if (category === 'Offerwalls') return 5;
     return TASKS.filter(task => task.category === category).length;
   };
 
@@ -705,44 +703,7 @@ const TasksPage: React.FC = () => {
         </div>
 
         <div className="grid gap-4">
-          {selectedCategory === 'Offerwalls' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                { id: 'offertoro', name: 'OfferToro Networks', reward: '12,000 - 150,000 🪙', desc: 'Download and register in leading Web3 games or complete special partner challenges.', gradient: 'from-yellow-500/10 via-amber-500/5 to-transparent', border: 'border-amber-500/30', accent: 'text-amber-400', badge: '🔥 HOT' },
-                { id: 'bitlabs', name: 'BitLabs Market Polls', reward: '15,000 - 90,000 🪙', desc: 'Express your sentiments on crypto trends and game structures in rapid surveys.', gradient: 'from-cyan-500/10 via-teal-500/5 to-transparent', border: 'border-cyan-500/30', accent: 'text-cyan-400', badge: '⚡ HIGH PAYOUT' },
-                { id: 'lootably', name: 'Lootably Trials', reward: '30,000 - 250,000 🪙', desc: 'Try newly introduced partner applications and games to unlock huge crypto values.', gradient: 'from-purple-500/10 via-indigo-500/5 to-transparent', border: 'border-purple-500/30', accent: 'text-purple-400', badge: '⭐ RECOMMENDED' },
-                { id: 'adgem', name: 'AdGem Campaigns', reward: '10,000 - 85,000 🪙', desc: 'Fulfill rapid subscription actions, test apps or play web portal mechanics.', gradient: 'from-orange-500/10 via-amber-500/5 to-transparent', border: 'border-orange-500/30', accent: 'text-orange-400', badge: '🚀 FAST' },
-                { id: 'pollfish', name: 'Pollfish Rapid Quizzes', reward: '5,000 - 40,000 🪙', desc: 'Participate in casual 30-second rapid feedback cycles on blockchain utility designs.', gradient: 'from-pink-500/10 via-rose-500/5 to-transparent', border: 'border-rose-500/30', accent: 'text-rose-400', badge: '✨ INSTANT' }
-              ].map((wall) => (
-                <motion.div
-                  key={wall.id}
-                  whileHover={{ scale: 1.02, translateY: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    triggerImpact('medium');
-                    setSelectedOfferwall(wall.id);
-                    setSurveyStep(0);
-                    setIsCompletingOffer(false);
-                  }}
-                  className={`relative p-5 rounded-3xl bg-gradient-to-br ${wall.gradient} border ${wall.border} overflow-hidden cursor-pointer flex flex-col justify-between group shadow-xl`}
-                >
-                  <div className="absolute top-0 right-0 py-1 px-3 bg-slate-900 border-l border-b border-slate-800 rounded-bl-xl text-[8px] font-black tracking-widest uppercase text-slate-400 group-hover:bg-slate-850">
-                    {wall.badge}
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-base font-black text-white flex items-center gap-1.5 font-sans">
-                      <span className="text-xl">📊</span> {wall.name}
-                    </h3>
-                    <p className="text-xs text-slate-400 leading-relaxed font-sans">{wall.desc}</p>
-                  </div>
-                  <div className="mt-5 pt-3 border-t border-slate-900/60 flex items-center justify-between">
-                    <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Estimated Yield:</span>
-                    <span className={`text-xs font-black ${wall.accent} font-mono`}>{wall.reward}</span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : filteredTasks.length === 0 ? (
+          {filteredTasks.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

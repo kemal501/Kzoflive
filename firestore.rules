@@ -22,11 +22,10 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        (request.auth.uid == "kemalziyad4@gmail.com") ||
         ("email" in request.auth.token && (request.auth.token.email == "kemalziyad4@gmail.com" || request.auth.token.email == "kemalziyad49@gmail.com")) ||
         (
           exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get("active", false) == true
+          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true
         )
       );
     }
@@ -40,11 +39,13 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) || isAdmin();
     }
 
     match /userTasks/{userTaskId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (userTaskId.startsWith(request.auth.uid + '_') || isAdmin());
     }
 
     match /tasks/{taskId} {
@@ -149,7 +150,7 @@ service cloud.firestore {
     }
 
     match /notifications/{notificationId} {
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userId == "broadcast" || isAdmin());
+      allow read: if isSignedIn();
       allow update: if isSignedIn() && (resource.data.userId == request.auth.uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
       allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isAdmin());
       allow delete: if isAdmin();

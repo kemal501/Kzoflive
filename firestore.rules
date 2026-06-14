@@ -1,0 +1,173 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Global Catch-All (Default Deny)
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Helpers
+    // ===============================================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // An admin is listed in the /admins/ collection and is active
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "kemalziyad4@gmail.com" ||
+        request.auth.token.email == "kemalziyad49@gmail.com" ||
+        (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true
+        )
+      );
+    }
+
+    // Input Validation Helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // ===============================================================
+    // Collection Specific Matches
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (userId == request.auth.uid || isAdmin());
+      allow update: if isSignedIn() && (
+        userId == request.auth.uid || 
+        isAdmin() ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followersCount', 'followingCount', 'coins', 'rewardPoints', 'referredBy', 'totalStreamingDuration']))
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /userTasks/{userTaskId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (userTaskId.startsWith(request.auth.uid) || isAdmin());
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /withdrawals/{withdrawalId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    match /withdrawalRequests/{requestId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /referrals/{referralId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /adminLogs/{logId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Modern Voice Room / Chat features
+    match /voiceRooms/{roomId} {
+      allow read: if true;
+      allow create, update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    match /voiceRooms/{roomId}/reactions/{reactionId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /rooms/{roomId}/chat/{chatId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /rooms/{roomId}/muted/{mutedId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /rooms/{roomId}/banned/{bannedId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /agentInvitations/{invitationId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /hostApplications/{applicationId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /inventories/{userId}/items/{itemId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (userId == request.auth.uid || isAdmin());
+    }
+
+    match /gifts/{giftId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /coinTransactions/{transactionId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /follows/{followId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /roomActivities/{activityId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userId == "broadcast" || isAdmin());
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /fraud_reports/{reportId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+  }
+}

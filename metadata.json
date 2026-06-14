@@ -1,0 +1,60 @@
+{
+  "name": "Oibb Earn",
+  "short_name": "Oibb Earn",
+  "description": "Production-ready Telegram Mini App. Complete tasks, refer friends, earn rewards, and manage withdrawals.",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "minimal-ui"
+  ],
+  "theme_color": "#2481cc",
+  "background_color": "#18222d",
+  "orientation": "portrait-primary",
+  "categories": [
+    "finance",
+    "social",
+    "entertainment"
+  ],
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/8244/8244517.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/8244/8244517.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Join Plaza",
+      "url": "/sitting",
+      "icons": [
+        {
+          "src": "https://cdn-icons-png.flaticon.com/512/8244/8244517.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "My Vault",
+      "url": "/earnings",
+      "icons": [
+        {
+          "src": "https://cdn-icons-png.flaticon.com/512/8244/8244517.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

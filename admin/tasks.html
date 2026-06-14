@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oibb Earn - Campaigns Setup</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Integration -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 flex min-h-screen">
+
+  <!-- NAVIGATION DRAWER SIDEBAR -->
+  <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
+    <div class="px-6 py-5 border-b border-slate-800 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+        <i data-lucide="shield-alert" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h2 class="text-sm font-black tracking-wide text-white uppercase">Oibb Admin</h2>
+        <p class="text-[10px] text-slate-500 uppercase tracking-widest leading-none">Security Center</p>
+      </div>
+    </div>
+
+    <nav class="flex-1 px-4 py-6 flex flex-col gap-1.5 bg-slate-900/40">
+      <a href="/admin/dashboard.html" class="flex items-center gap-3 hover:bg-slate-800/60 text-slate-400 hover:text-white rounded-xl px-4 py-3.5 text-xs font-bold transition">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+        <span>Dashboard Hub</span>
+      </a>
+      <a href="/admin/users.html" class="flex items-center gap-3 hover:bg-slate-800/60 text-slate-400 hover:text-white rounded-xl px-4 py-3.5 text-xs font-bold transition border border-transparent hover:border-slate-800/40">
+        <i data-lucide="users-round" class="w-4 h-4"></i>
+        <span>User Explorer</span>
+      </a>
+      <a href="/admin/withdrawals.html" class="flex items-center gap-3 hover:bg-slate-800/60 text-slate-400 hover:text-white rounded-xl px-4 py-3.5 text-xs font-bold transition border border-transparent hover:border-slate-800/40">
+        <i data-lucide="wallet" class="w-4 h-4"></i>
+        <span>Withdrawals Process</span>
+      </a>
+      <a href="/admin/tasks.html" class="flex items-center gap-3 bg-indigo-500/15 border border-indigo-500/25 text-indigo-400 rounded-xl px-4 py-3.5 text-xs font-bold transition">
+        <i data-lucide="database" class="w-4 h-4"></i>
+        <span>Engagement Campaigns</span>
+      </a>
+      <a href="/admin/logs.html" class="flex items-center gap-3 hover:bg-slate-800/60 text-slate-400 hover:text-white rounded-xl px-4 py-3.5 text-xs font-bold transition border border-transparent hover:border-slate-800/40">
+        <i data-lucide="lock" class="w-4 h-4"></i>
+        <span>Security Audit Logs</span>
+      </a>
+
+      <div class="h-[2px] bg-slate-800/65 my-4"></div>
+
+      <a href="/" class="flex items-center gap-3 hover:bg-indigo-600 hover:text-white bg-indigo-500/10 text-indigo-400 rounded-xl px-4 py-3 text-xs font-bold transition border border-indigo-500/10 mt-auto">
+        <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+        <span>Back to App Center</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- CONTENT SECTION MAIN VIEW -->
+  <main class="flex-grow flex flex-col p-8 overflow-y-auto max-w-5xl mx-auto w-full">
+    
+    <header class="flex items-center justify-between pb-6 border-b border-slate-800/60 mb-8">
+      <div>
+        <h1 class="text-2xl font-black text-white tracking-tight">Engagement Campaigns</h1>
+        <p class="text-xs text-slate-400 mt-1">Configure active social quests, video ad integrations, or community channels payouts.</p>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      <!-- Create Task Campaign form -->
+      <div id="create-box" class="bg-slate-905 border border-slate-800 p-6 rounded-2xl shadow-xl h-fit flex flex-col gap-4">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="plus-circle" class="text-indigo-400"></i>
+          <span>Create New Campaign</span>
+        </h3>
+        
+        <form onsubmit="handleCreateTask(event)" class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Campaign Title</label>
+            <input id="t-title" type="text" placeholder="e.g. Join Oibb Partner Channel" class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500 transition text-white" required>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Goal Category</label>
+            <select id="t-type" class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500 transition text-white">
+              <option value="channel_join">Join Telegram Channel</option>
+              <option value="visit_website">Visit Website</option>
+              <option value="watch_ad">Watch Sponsored Ad</option>
+              <option value="social_follow">Follow Social Page</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Redirect Target URL</label>
+            <input id="t-url" type="url" placeholder="https://t.me/example" class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500 transition text-white" required>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Reward Allocator (Coins)</label>
+            <input id="t-reward" type="number" min="1" placeholder="e.g. 500" class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500 transition text-white font-mono" required>
+          </div>
+
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 font-extrabold text-white text-xs uppercase tracking-wide py-3.5 mt-2 rounded-xl transition shadow-lg">Create Campaign</button>
+        </form>
+      </div>
+
+      <!-- Live Tasks database listing -->
+      <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl md:col-span-2">
+        <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+          <i data-lucide="database" class="text-indigo-400"></i>
+          <span>Campaigns Database logs</span>
+        </h3>
+
+        <!-- Dynamic List of existing tasks -->
+        <div id="tasks-db-rows" class="flex flex-col gap-3">
+          <p class="text-xs text-slate-500 italic">No tasks registered yet...</p>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      loadCampaigns();
+    });
+
+    async function loadCampaigns() {
+      const dbContainer = document.getElementById('tasks-db-rows');
+      
+      try {
+        const adminToken = localStorage.getItem('oibb_admin_token') || 'dev_master_admin_token';
+        const res = await fetch('/api/tasks', {
+          headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const campaigns = await res.json();
+
+        if (!campaigns || campaigns.length === 0) {
+          dbContainer.innerHTML = `<p class="text-xs text-slate-500 italic py-4">No active task campaigns mapped inside database.</p>`;
+          return;
+        }
+
+        dbContainer.innerHTML = campaigns.map(camp => {
+          const indicator = camp.active ? 'bg-emerald-400/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-400/10 border-rose-500/20 text-rose-400';
+          const toggleLbl = camp.active ? 'Disable' : 'Enable';
+          const toggleCls = camp.active ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20 hover:bg-rose-500/25' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25';
+
+          return `
+            <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4 flex items-center justify-between gap-4 transition hover:border-slate-700/60">
+              <div>
+                <h4 class="text-xs font-bold text-white">${camp.title}</h4>
+                <div class="flex items-center gap-2 mt-2">
+                  <span class="mono-text text-[10px] font-bold text-amber-400 font-mono">+${camp.reward} 🪙</span>
+                  <span class="text-slate-650">•</span>
+                  <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">${camp.taskType}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase tracking-wide ${indicator}">${camp.active ? 'Active' : 'Disabled'}</span>
+                <button onclick="toggleCampaign('${camp.id}', ${!camp.active})" class="${toggleCls} font-bold px-3 py-1.5 rounded-lg text-[10px] tracking-wide transition uppercase">
+                  ${toggleLbl}
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        lucide.createIcons();
+
+      } catch (err) {
+        dbContainer.innerHTML = `<p class="text-xs text-red-400 font-bold">Failed to connect to backend campaigns server.</p>`;
+      }
+    }
+
+    async function handleCreateTask(e) {
+      e.preventDefault();
+
+      const title = document.getElementById('t-title').value;
+      const taskType = document.getElementById('t-type').value;
+      const taskUrl = document.getElementById('t-url').value;
+      const reward = parseInt(document.getElementById('t-reward').value);
+
+      try {
+        const adminToken = localStorage.getItem('oibb_admin_token') || 'dev_master_admin_token';
+        const res = await fetch('/api/admin/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({ title, reward, taskType, taskUrl })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          alert('Task Deployment Rejected: ' + data.error);
+          return;
+        }
+
+        alert('Campaign Task deployed and authenticated on database successfully!');
+        
+        // Clear forms
+        document.getElementById('t-title').value = "";
+        document.getElementById('t-url').value = "";
+        document.getElementById('t-reward').value = "";
+
+        loadCampaigns();
+
+      } catch (err) {
+        alert('Server connection error. Failed to commit task.');
+      }
+    }
+
+    async function toggleCampaign(taskId, nextState) {
+      try {
+        const adminToken = localStorage.getItem('oibb_admin_token') || 'dev_master_admin_token';
+        const res = await fetch(`/api/admin/tasks/${taskId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({ active: nextState })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          alert('Patch rejected: ' + data.error);
+          return;
+        }
+
+        loadCampaigns();
+
+      } catch (err) {
+        alert('Server refused connection');
+      }
+    }
+  </script>
+</body>
+</html>

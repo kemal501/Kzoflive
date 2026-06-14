@@ -1,0 +1,176 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Telegram user profile.",
+      "type": "object",
+      "properties": {
+        "telegramId": { "type": "string", "description": "Unique Telegram User ID." },
+        "username": { "type": "string", "description": "Telegram username." },
+        "firstName": { "type": "string", "description": "First name of user on Telegram." },
+        "balance": { "type": "number", "description": "Current coins balance." },
+        "totalEarned": { "type": "number", "description": "Total earned coins since registration." },
+        "referralCode": { "type": "string", "description": "Unique referral code for invitations." },
+        "referredBy": { "type": "string", "description": "Referrer user ID." },
+        "referralCount": { "type": "number", "description": "Count of successfully referred friends." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "User registration timestamp." }
+      },
+      "required": ["telegramId", "username", "firstName", "balance", "totalEarned", "referralCode", "referredBy", "referralCount", "createdAt"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Campaign tasks for users to earn coins.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the task." },
+        "reward": { "type": "number", "description": "Amount of coins rewarded upon completion." },
+        "taskType": { "type": "string", "description": "Type: channel_join, visit_website, watch_ad, social_follow, daily_login" },
+        "taskUrl": { "type": "string", "description": "Target redirection URL for task completion." },
+        "active": { "type": "boolean", "description": "Active status of the task." }
+      },
+      "required": ["title", "reward", "taskType", "taskUrl", "active"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Coins transaction history.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user." },
+        "amount": { "type": "number", "description": "Coins transacted (positive or negative)." },
+        "type": { "type": "string", "description": "Type: reward, task, checkin, referral, withdrawal" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Time of transaction." }
+      },
+      "required": ["userId", "amount", "type", "createdAt"]
+    },
+    "Withdrawal": {
+      "title": "Withdrawal",
+      "description": "User cash out withdrawal requests.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user of withdrawal." },
+        "amount": { "type": "number", "description": "Amount of coins to withdraw." },
+        "method": { "type": "string", "description": "Supported gateways: TON, USDT, Bybit UID, Telebirr, SantimPay" },
+        "address": { "type": "string", "description": "Target address / transfer detail." },
+        "status": { "type": "string", "description": "Status: pending, approved, rejected." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Withdrawal request timestamp." },
+        "approvedAt": { "type": "string", "format": "date-time", "description": "Withrawal approval/rejection timestamp." }
+      },
+      "required": ["userId", "amount", "method", "address", "status", "createdAt"]
+    },
+    "Referral": {
+      "title": "Referral",
+      "description": "Referrals logs between users.",
+      "type": "object",
+      "properties": {
+        "referrerId": { "type": "string", "description": "UID of referring user." },
+        "referredUserId": { "type": "string", "description": "UID of newly signed up user." },
+        "reward": { "type": "number", "description": "Amount of coins paid out as a reward." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of referral registration." }
+      },
+      "required": ["referrerId", "referredUserId", "reward", "createdAt"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Admin authorization entry.",
+      "type": "object",
+      "properties": {
+        "telegramId": { "type": "string", "description": "Telegram user ID." },
+        "role": { "type": "string", "description": "Admin role: superadmin, admin" },
+        "active": { "type": "boolean", "description": "Active status." }
+      },
+      "required": ["telegramId", "role", "active"]
+    },
+    "AdminLog": {
+      "title": "AdminLog",
+      "description": "System-wide tracking logs for administrative actions.",
+      "type": "object",
+      "properties": {
+        "adminId": { "type": "string", "description": "ID of executing admin." },
+        "action": { "type": "string", "description": "Action details." },
+        "targetId": { "type": "string", "description": "ID of target document / user." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Time of event execution." }
+      },
+      "required": ["adminId", "action", "targetId", "timestamp"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "System configuration parameters.",
+      "type": "object",
+      "properties": {
+        "exchangeRate": { "type": "number", "description": "Tokens exchange coefficient." },
+        "minWithdrawal": { "type": "number", "description": "Minimum tokens withdrawal equivalent." }
+      },
+      "required": ["exchangeRate", "minWithdrawal"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "In-app system notification.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the receiving user or 'broadcast' for everyone." },
+        "title": { "type": "string", "description": "Title of the notification." },
+        "message": { "type": "string", "description": "Body content of the notification." },
+        "type": { "type": "string", "description": "Type: reward, withdrawal, referral, announcement" },
+        "read": { "type": "boolean", "description": "Unread / read status." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp." }
+      },
+      "required": ["userId", "title", "message", "type", "read", "createdAt"]
+    },
+    "FraudReport": {
+      "title": "FraudReport",
+      "description": "Fraud detection logs.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the flagged user." },
+        "trigger": { "type": "string", "description": "Indicator of fraud: duplicate_fingerprint, emulator_detected, headless_browser, etc." },
+        "score": { "type": "number", "description": "Calculated fraud risk score of the request." },
+        "fingerprint": { "type": "string", "description": "Device fingerprint captured." },
+        "details": { "type": "string", "description": "Additional stringified metadata." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Time of report creation." }
+      },
+      "required": ["userId", "trigger", "score", "fingerprint", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Users registration records mapped by UID."
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Engagement Tasks."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Transactions history."
+    },
+    "/withdrawals/{withdrawalId}": {
+      "schema": "Withdrawal",
+      "description": "Withdrawals requests."
+    },
+    "/referrals/{referralId}": {
+      "schema": "Referral",
+      "description": "Referrals tracking relations."
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Active administrators."
+    },
+    "/adminLogs/{logId}": {
+      "schema": "AdminLog",
+      "description": "Audit trails for admin activities."
+    },
+    "/settings/{settingId}": {
+      "schema": "Settings",
+      "description": "Global settings and exchange rate configurations."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "System-wide and user-specific in-app notifications."
+    },
+    "/fraud_reports/{reportId}": {
+      "schema": "FraudReport",
+      "description": "Fraud and security violation reports."
+    }
+  }
+}

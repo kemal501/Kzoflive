@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oibb Earn - Telegram Mini App</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Integration -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .mono-text {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-[#18222d] text-white selection:bg-[#2481cc]/30 selection:text-white overflow-x-hidden min-h-screen flex flex-col">
+
+  <!-- Simulation Header for Non-Telegram Browsers -->
+  <header id="tg-header" class="bg-[#2481cc] px-4 py-3 flex items-center justify-between shadow-md border-b border-[#2481cc]/20">
+    <div class="flex items-center gap-2">
+      <div id="sim-t-badge" class="w-8 h-8 rounded-full bg-[#1e2b38] border border-white flex items-center justify-center font-bold text-white text-xs text-[10px]">TG</div>
+      <div>
+        <h1 class="text-sm font-extrabold tracking-wide uppercase">Oibb Earn</h1>
+        <p class="text-[10px] text-white/80 uppercase tracking-widest leading-none">Simulation Mode</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <!-- Admin Link Shortcut -->
+      <a href="/admin/dashboard.html" class="bg-[#1e2b38] hover:bg-[#1a2530] text-white text-xs font-bold px-3 py-1.5 rounded-full border border-slate-700 flex items-center gap-1 transition">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span>Admin</span>
+      </a>
+      <!-- Network Badge -->
+      <div class="flex items-center gap-1.5 bg-[#18222d]/80 px-2.5 py-1 rounded-full text-xs font-semibold text-emerald-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-[10px] uppercase">Online</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation View Tabs -->
+  <main class="flex-1 w-full max-w-md mx-auto px-4 py-6 flex flex-col gap-6 mb-20 overflow-y-auto">
+    
+    <!-- AUTHENTICATION CAROUSEL BOX -->
+    <section id="auth-box" class="bg-[#1e2b38] rounded-2xl p-5 border border-slate-700/60 shadow-xl flex flex-col gap-4">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-xl bg-[#2481cc]/20 flex items-center justify-center text-[#2481cc]">
+          <i data-lucide="key-round" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h2 class="text-md font-bold text-white">Telegram Auth Simulation</h2>
+          <p class="text-xs text-slate-400 mt-1">To mimic launch from an authentic Telegram Bot client, pick a test profile below.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mt-2">
+        <button onclick="simulateTgLogin(123456789, 'super_admin_oibb', 'John', 'Doe')" class="bg-slate-800 hover:bg-slate-700/80 border border-slate-700 rounded-xl p-3 text-left transition flex flex-col gap-1">
+          <span class="text-xs font-bold text-emerald-400 flex items-center gap-1">
+            <i data-lucide="shield" class="w-3 h-3"></i> Admin Account
+          </span>
+          <span class="text-[10px] text-slate-400">UID: 123456789</span>
+        </button>
+        <button onclick="simulateTgLogin(987654321, 'kemal_tester', 'Kemal', 'Ziyad')" class="bg-slate-800 hover:bg-slate-700/80 border border-slate-700 rounded-xl p-3 text-left transition flex flex-col gap-1">
+          <span class="text-xs font-bold text-[#2481cc]">Standard User</span>
+          <span class="text-[10px] text-slate-400">UID: 987654321</span>
+        </button>
+      </div>
+
+      <!-- Referral Start Simulate Option -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs text-slate-300">
+        <div class="flex items-center gap-1.5 font-bold mb-1 text-slate-200">
+          <i data-lucide="user-plus" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>Simulate Signing up via Referral:</span>
+        </div>
+        <div class="flex gap-2">
+          <input id="ref-simulate-code" type="text" placeholder="Inviter's Referral Code" class="bg-slate-800 border border-slate-700 outline-none rounded p-1 text-[10px] flex-1 text-white uppercase font-bold tracking-wide">
+          <button onclick="applySimulatedReferral()" class="bg-[#2481cc] hover:bg-[#1f70b0] font-bold px-3 py-1 rounded text-[10px] text-white">Set Code</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- USER HEALTH STATS CARD -->
+    <section id="user-profile-widget" class="hidden flex flex-col gap-4">
+      
+      <!-- Balance Card -->
+      <div class="bg-[#1e2b38] rounded-2xl p-6 border border-slate-700/60 shadow-xl flex flex-col items-center justify-center text-center relative overflow-hidden backdrop-blur-md">
+        <!-- Accent Glow background decoration -->
+        <div class="absolute -right-24 -top-24 w-48 h-48 rounded-full bg-[#2481cc]/10 blur-3xl"></div>
+        <div class="absolute -left-24 -bottom-24 w-48 h-48 rounded-full bg-yellow-500/10 blur-3xl"></div>
+
+        <p class="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Oibb Earn Coins</p>
+        
+        <div class="flex items-center gap-2 mt-3 select-none">
+          <span class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 mono-text tracking-tight" id="user-balance">0</span>
+          <span class="text-3xl">🪙</span>
+        </div>
+
+        <div class="flex items-center gap-4 mt-4 w-full border-t border-slate-700/80 pt-4">
+          <div class="flex-1 text-center border-r border-slate-700">
+            <p class="text-[10px] uppercase font-bold text-slate-400">Total Earned</p>
+            <p class="text-md font-extrabold text-slate-200 mt-0.5"><span id="user-earned">0</span> 🪙</p>
+          </div>
+          <div class="flex-1 text-center">
+            <p class="text-[10px] uppercase font-bold text-slate-400">Referrals Count</p>
+            <p class="text-md font-extrabold text-slate-200 mt-0.5"><span id="user-ref-count">0</span> 👥</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions (Checkin / Daily claim) -->
+      <button id="daily-checkin-btn" onclick="claimDailyBonus()" class="w-full bg-gradient-to-r from-[#2481cc] to-[#1f70b0] hover:from-[#1f70b0] hover:to-[#1a5f97] text-white font-extrabold py-3.5 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2.5">
+        <i data-lucide="zap" class="w-5 h-5 animate-bounce"></i>
+        <span>Claim Daily Check-In Bonus (+100 🪙)</span>
+      </button>
+
+    </section>
+
+    <!-- CONTENT VIEWER AND ROUTER PAGES -->
+    <div id="pages-container" class="hidden flex flex-col gap-6">
+
+      <!-- PAGE 1: TASK CENTER -->
+      <section id="page-tasks" class="view-page flex flex-col gap-4">
+        <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="award" class="text-yellow-400"></i>
+            <span>Campaign Tasks</span>
+          </h3>
+          <span class="bg-[#1e2b38] border border-slate-700 rounded-full px-3 py-1 text-xs font-bold text-amber-400 uppercase tracking-widest leading-none">Earn Coins</span>
+        </div>
+        
+        <p class="text-xs text-slate-400 -mt-2 leading-relaxed">Complete daily marketing and social campaign goals. Do not attempt duplicates; systemic locks are automatically enforced.</p>
+
+        <!-- Dynamic List Injection Root -->
+        <div id="tasks-list" class="flex flex-col gap-3">
+          <div class="py-12 flex flex-col items-center justify-center text-center text-slate-500 bg-slate-900/20 border border-slate-800 rounded-2xl px-4">
+            <div class="w-12 h-12 rounded-full border border-slate-800 flex items-center justify-center mb-3">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#2481cc] animate-ping"></span>
+            </div>
+            <p class="text-xs font-semibold text-slate-400 uppercase">Synchronizing campaigns database...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 2: REFERRAL PAGE -->
+      <section id="page-referrals" class="view-page hidden flex flex-col gap-4">
+        <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="users" class="text-[#2481cc]"></i>
+            <span>Referrals Dashboard</span>
+          </h3>
+          <span class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest leading-none">+500 🪙</span>
+        </div>
+        
+        <!-- Referral link banner -->
+        <div class="bg-[#1e2b38] col-span-1 border border-slate-700/60 rounded-2xl p-5 shadow-xl flex flex-col gap-3">
+          <h4 class="text-sm font-bold text-white">Your Unique Referral Link</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">Copy the link and hit share! When a new user logs in via your invite, you get **500 🪙** and they get **200 🪙** instantly!</p>
+          
+          <div class="flex gap-2 mt-1">
+            <input id="ref-link-field" type="text" readonly class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none flex-1 font-mono text-slate-300 pointer-events-none select-all overflow-hidden" value="Loading...">
+            <button onclick="copyReferralLink()" class="bg-[#2481cc] hover:bg-[#1f70b0] hover:shadow-lg rounded-xl px-4 text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+              <span>Copy</span>
+            </button>
+          </div>
+          <p id="copy-success-p" class="text-[10px] text-emerald-400 hidden flex items-center gap-1 font-semibold leading-none mt-1">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Link copied to clipboard!
+          </p>
+        </div>
+      </section>
+
+      <!-- PAGE 3: WITHDRAWAL PAGE -->
+      <section id="page-withdrawals" class="view-page hidden flex flex-col gap-4">
+        <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="wallet" class="text-emerald-400"></i>
+            <span>Cash Out Portal</span>
+          </h3>
+          <span class="bg-red-500/10 border border-red-500/20 text-red-400 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest leading-none">Instant Hold</span>
+        </div>
+
+        <p class="text-xs text-slate-400 -mt-2 leading-relaxed">Redeem your coins balance into standard crypto, wallet transfers, or internal platform exchanges.</p>
+
+        <form id="withdraw-form" onsubmit="handleWithdrawalSubmit(event)" class="bg-[#1e2b38] border border-slate-700/60 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+          <!-- Gateway Selection -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-extrabold uppercase text-slate-400 tracking-wider">Select Withdrawal Method</label>
+            <select id="w-method" class="bg-slate-900 border border-slate-700 text-white rounded-xl p-3 outline-none focus:border-[#2481cc] transition-colors font-semibold text-sm">
+              <option value="TON">TON (The Open Network)</option>
+              <option value="USDT">USDT (TRC-20)</option>
+              <option value="Bybit UID">Bybit UID (Exchange Transfer)</option>
+              <option value="Telebirr">Telebirr (Mobile Wallet)</option>
+              <option value="SantimPay">SantimPay (Fintech Pay)</option>
+            </select>
+          </div>
+
+          <!-- Payout Address -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-extrabold uppercase text-slate-400 tracking-wider">Payment Address / UID Detail</label>
+            <input id="w-address" type="text" placeholder="Enter payout address, phone, or exchange UID" class="bg-slate-900 border border-slate-700 text-white rounded-xl p-3 outline-none focus:border-[#2481cc] transition-colors text-sm" required>
+          </div>
+
+          <!-- Coins Payout -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-extrabold uppercase text-slate-400 tracking-wider">Amount to Redeem (Coins)</label>
+            <div class="relative">
+              <input id="w-amount" type="number" min="100" placeholder="Minimum: 100 coins" class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-3 outline-none focus:border-[#2481cc] transition-colors text-sm pr-16" required>
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-extrabold text-xs">COINS</span>
+            </div>
+            <p class="text-[10px] text-slate-400 italic mt-1 leading-relaxed">• 1,000 Coins = $1.00 USD. Minimum cash-out: 100 coins.</p>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold py-3.5 rounded-xl shadow-lg transition duration-200 mt-2 text-sm uppercase tracking-wide">
+            Request Payout
+          </button>
+        </form>
+      </section>
+
+      <!-- PAGE 4: TRANSACTION HISTORY -->
+      <section id="page-history" class="view-page hidden flex flex-col gap-4">
+        <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="receipt" class="text-amber-400"></i>
+            <span>Account Ledger</span>
+          </h3>
+          <span class="bg-slate-800 border border-slate-700 rounded-full px-3 py-1 text-xs font-bold text-slate-300 uppercase tracking-widest leading-none">Ledger Logs</span>
+        </div>
+
+        <p class="text-xs text-slate-400 -mt-2 leading-relaxed">Chronological ledger showing all reward completions, daily rewards, referrals, and withdrawal holds.</p>
+
+        <!-- Ledger Log Root -->
+        <div id="history-list" class="flex flex-col gap-3">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Navigation Tab Bar (Persistent bottom dock) -->
+  <footer id="bottom-tabs" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#1e2b38]/95 border-t border-slate-700/60 flex items-center justify-around py-3 rounded-t-2xl shadow-[0_-5px_15px_rgba(0,0,0,0.4)] backdrop-blur-md hidden z-40">
+    <button onclick="switchTab('tasks', this)" class="tab-btn flex flex-col items-center gap-1 text-[#2481cc] transition">
+      <i data-lucide="award" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Tasks</span>
+    </button>
+    <button onclick="switchTab('referrals', this)" class="tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+      <i data-lucide="users" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Invite</span>
+    </button>
+    <button onclick="switchTab('withdrawals', this)" class="tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+      <i data-lucide="wallet" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Wallet</span>
+    </button>
+    <button onclick="switchTab('history', this)" class="tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+      <i data-lucide="receipt" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Ledger</span>
+    </button>
+  </footer>
+
+  <!-- Toast Notification Wrapper -->
+  <div id="toast-root" class="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 hidden pointer-events-none z-50">
+    <div id="toast" class="bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-2xl flex items-start gap-3 pointer-events-auto transition">
+      <!-- Injected from Javascript -->
+    </div>
+  </div>
+
+  <!-- App Main JavaScript Logic -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BARCA-LIVE - Live Streaming & Voice Rooms Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* BRAND COLORS */
+            --cyan: #00D4FF;
+            --purple: #9D4EDD;
+            --gold: #FFD700;
+            --red: #FF006E;
+            --green: #3DDC84;
+            --orange: #FF6B35;
+            
+            /* BACKGROUNDS */
+            --bg-primary: #0A0E27;
+            --bg-secondary: #1B1F3B;
+            --bg-card: #232F4F;
+            --bg-elevated: #2D3E5F;
+            
+            /* TEXT */
+            --text-primary: #FFFFFF;
+            --text-secondary: #E0E7FF;
+            --text-muted: #7C8AB3;
+            
+            /* BORDERS */
+            --border: #3D4A6B;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #F0F4F8;
+            --bg-card: #FFFFFF;
+            --bg-elevated: #EEF2F5;
+            --text-primary: #0A0E27;
+            --text-secondary: #334155;
+            --text-muted: #94A3B8;
+            --border: #E2E8F0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* ========== AUTH SCREEN ========== */
+        .auth-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .auth-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.15);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .auth-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--cyan);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 700;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .auth-tab.active {
+            color: var(--cyan);
+            border-bottom-color: var(--cyan);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+        }
+
+        .btn-primary {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--cyan) 0%, #00A8D8 100%);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-social {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-social:hover {
+            border-color: var(--cyan);
+            background: var(--bg-elevated);
+        }
+
+        .divider {
+            text-align: center;
+            color: var(--text-muted);
+            position: relative;
+            margin: 16px 0;
+            font-size: 12px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+
+        /* ========== APP SCREEN ========== */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .app-header {
+            background: linear-gradient(90deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            border-bottom: 2px solid var(--cyan);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15);
+        }
+
+        .header-left {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .menu-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-weight: 900;
+            font-size: 20px;
+            color: var(--cyan);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .coins-display {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 107, 53, 0.1) 100%);
+            border: 2px solid var(--gold);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 800;
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            font-size: 14px;
+        }
+
+        .app-main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .bottom-nav {
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            border-top: 2px solid var(--purple);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -4px 20px rgba(157, 78, 221, 0.15);
+        }
+
+        .nav-item {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 10px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 12px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--cyan);
+            border-bottom-color: var(--cyan);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* ========== HOME PAGE ========== */
+        .home-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 900;
+            margin: 20px 0 12px 0;
+            color: var(--text-primary);
+        }
+
+        .streams-grid,
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stream-card,
+        .room-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, #2D3E5F 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .stream-card:hover,
+        .room-card:hover {
+            border-color: var(--cyan);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 212, 255, 0.2);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .card-info {
+            padding: 10px;
+        }
+
+        .card-name {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-stats {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-stat-value {
+            color: var(--cyan);
+            font-weight: 700;
+        }
+
+        /* ========== LIVE STREAM PAGE ========== */
+        .stream-player {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin-bottom: 16px;
+            position: relative;
+            border: 2px solid var(--cyan);
+        }
+
+        .live-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(135deg, var(--red), #D90061);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 12px;
+            animation: pulse 1s infinite;
+            text-shadow: 0 0 10px rgba(255, 0, 110, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(255, 0, 110, 0.5);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(255, 0, 110, 0.8);
+                transform: scale(1.05);
+            }
+        }
+
+        .earnings-display {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+            border: 2px solid var(--gold);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(255, 215, 0, 0.2);
+        }
+
+        .earnings-title {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .earnings-amount {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            margin-bottom: 8px;
+        }
+
+        .earnings-breakdown {
+            display: flex;
+            justify-content: space-around;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .chat-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .chat-user {
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .chat-text {
+            color: var(--text-secondary);
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 12px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+        }
+
+        .btn-send {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--cyan), #00A8D8);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* ========== ROOMS PAGE ========== */
+        .create-room-btn {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--green), #1DB584);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .room-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 11px;
+        }
+
+        .room-members {
+            color: var(--cyan);
+            font-weight: 700;
+        }
+
+        .room-type {
+            background: linear-gradient(135deg, var(--purple), #7B2FF7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        /* ========== WALLET PAGE ========== */
+        .wallet-balance {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+            border: 2px solid var(--gold);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(255, 215, 0, 0.2);
+        }
+
+        .balance-title {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .balance-amount {
+            font-size: 40px;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            margin-bottom: 4px;
+        }
+
+        .balance-usd {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .btn-action {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-recharge {
+            background: linear-gradient(135deg, var(--green), #1DB584);
+        }
+
+        .btn-withdraw {
+            background: linear-gradient(135deg, var(--orange), #FF5722);
+        }
+
+        .transaction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .transaction-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .transaction-type {
+            font-weight: 700;
+        }
+
+        .transaction-amount {
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .transaction-credit {
+            color: var(--green);
+        }
+
+        .transaction-debit {
+            color: var(--red);
+        }
+
+        /* ========== PROFILE PAGE ========== */
+        .profile-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 12px;
+            border: 3px solid var(--gold);
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--text-primary);
+        }
+
+        .profile-id {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--cyan);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--red), #D90061);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* ========== MODAL ========== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            max-width: 90%;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--text-primary);
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 640px) {
+            .auth-box {
+                padding: 20px;
+            }
+
+            .streams-grid,
+            .rooms-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ========== SCROLLBAR ========== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--cyan);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--purple);
+        }
+    </style>
+</head>
+<body>
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <div class="auth-logo">🎬</div>
+                <div class="auth-title">BARCA-LIVE</div>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">LOGIN</button>
+                <button class="auth-tab" onclick="switchAuthTab('signup')">SIGN UP</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form class="auth-form active" id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email or Phone</label>
+                    <input type="text" id="login-email" placeholder="Enter email or phone" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="btn-primary">Sign In</button>
+
+                <div class="divider">OR</div>
+
+                <button type="button" class="btn-social" onclick="loginWithGoogle()">
+                    <span>🔵</span> Google
+                </button>
+                <button type="button" class="btn-social" onclick="loginWithFacebook()">
+                    <span>📘</span> Facebook
+                </button>
+                <button type="button" class="btn-social" onclick="showPhoneLogin()">
+                    <span>📱</span> Phone Number
+                </button>
+            </form>
+
+            <!-- SIGNUP FORM -->
+            <form class="auth-form" id="signup-form" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="signup-name" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signup-email" placeholder="Enter email" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="signup-phone" placeholder="Enter phone number" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signup-password" placeholder="Create password" required>
+                </div>
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select id="signup-gender" required>
+                        <option value="">Select gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Account Type</label>
+                    <select id="signup-type" required>
+                        <option value="">Select account type</option>
+                        <option value="host">Host/Streamer</option>
+                        <option value="viewer">Viewer</option>
+                        <option value="agent">Agent/Recruiter</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APP SCREEN -->
+    <div id="app-screen" class="app" style="display: none;">
+        <!-- HEADER -->
+        <div class="app-header">
+            <div class="header-left">
+                <button class="menu-btn" onclick="toggleMenu()">☰</button>
+                <div class="header-title">🎬 BARCA</div>
+            </div>
+            <div class="header-right">
+                <div class="coins-display">🪙 <span id="coins-display">0</span></div>
+                <button class="menu-btn" onclick="toggleTheme()">🌙</button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="app-main">
+            <!-- HOME PAGE -->
+            <div id="page-home" class="page active">
+                <div class="home-container">
+                    <div class="section-title">🎥 LIVE STREAMS</div>
+                    <div class="streams-grid" id="streams-grid">
+                        <div class="stream-card" onclick="goLive()">
+                            <div class="card-image">+</div>
+                            <div class="card-info">
+                                <div class="card-name">Go Live</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">🎤 VOICE ROOMS</div>
+                    <div class="rooms-grid" id="rooms-grid">
+                        <div class="room-card" onclick="openCreateRoom()">
+                            <div class="card-image">+</div>
+                            <div class="card-info">
+                                <div class="card-name">Create</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">🏆 TOP EARNERS</div>
+                    <div id="leaderboard"></div>
+                </div>
+            </div>
+
+            <!-- LIVE PAGE -->
+            <div id="page-live" class="page">
+                <div class="stream-player">📹</div>
+                <div class="live-badge" id="live-badge">🔴 LIVE</div>
+                <div class="earnings-display">
+                    <div class="earnings-title">Your Earnings</div>
+                    <div class="earnings-amount" id="stream-earnings">🪙 0</div>
+                    <div class="earnings-breakdown">
+                        <span>You: 70%</span>
+                        <span>Agency: 20%</span>
+                        <span>Platform: 10%</span>
+                    </div>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" class="chat-input" id="chat-input" placeholder="Say something...">
+                        <button class="btn-send" onclick="sendChat()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROOMS PAGE -->
+            <div id="page-rooms" class="page">
+                <button class="create-room-btn" onclick="openCreateRoom()">+ CREATE NEW ROOM</button>
+                <div id="rooms-list"></div>
+            </div>
+
+            <!-- WALLET PAGE -->
+            <div id="page-wallet" class="page">
+                <div class="wallet-balance">
+                    <div class="balance-title">Total Balance</div>
+                    <div class="balance-amount"><span id="wallet-coins">0</span> COINS</div>
+                    <div class="balance-usd">≈ $<span id="wallet-usd">0</span></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-action btn-recharge" onclick="openRecharge()">💎 RECHARGE</button>
+                    <button class="btn-action btn-withdraw" onclick="openWithdraw()">💳 WITHDRAW</button>
+                </div>
+
+                <div class="section-title">Recent Transactions</div>
+                <div class="transaction-list" id="transactions"></div>
+            </div>
+
+            <!-- PROFILE PAGE -->
+            <div id="page-profile" class="page">
+                <div class="profile-header">
+                    <div class="profile-avatar">👤</div>
+                    <div class="profile-name" id="profile-name">User Name</div>
+                    <div class="profile-id" id="profile-id">ID: 123456</div>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-streams">0</div>
+                        <div class="stat-label">Streams</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-earned">0</div>
+                        <div class="stat-label">Earned</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-level">1</div>
+                        <div class="stat-label">Level</div>
+                    </div>
+                </div>
+
+                <button class="logout-btn" onclick="logout()">🚪 LOGOUT</button>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAVIGATION -->
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="navigateTo('home')">🏠 Home</button>
+            <button class="nav-item" onclick="navigateTo('live')">📡 Live</button>
+            <button class="nav-item" onclick="navigateTo('rooms')">🎤 Rooms</button>
+            <button class="nav-item" onclick="navigateTo('wallet')">💰 Wallet</button>
+            <button class="nav-item" onclick="navigateTo('profile')">👤 Profile</button>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="create-room-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <div class="modal-title">Create Voice Room</div>
+                <button class="close-btn" onclick="closeModal('create-room-modal')">✕</button>
+            </div>
+            <form onsubmit="createRoom(event)">
+                <div class="form-group">
+                    <label>Room Name</label>
+                    <input type="text" id="room-name" placeholder="Enter room name" required>
+                </div>
+                <div class="form-group">
+                    <label>Room Type</label>
+                    <select id="room-type" required>
+                        <option value="music">🎵 Music</option>
+                        <option value="talk">💬 Talk</option>
+                        <option value="gaming">🎮 Gaming</option>
+                        <option value="dating">❤️ Dating</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Max Seats (6-12)</label>
+                    <input type="number" id="room-seats" min="6" max="12" value="6" required>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%;">Create Room</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ========== STATE MANAGEMENT ==========
+        let currentUser = null;
+        let userCoins = 0;
+        let rooms = [];
+        let streams = [];
+        let accountCreationTime = null;
+
+        // ========== AUTH FUNCTIONS ==========
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-form').classList.add('active');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (email && password) {
+                currentUser = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: 'User',
+                    email: email,
+                    coins: 0,
+                    createdAt: Date.now()
+                };
+                
+                userCoins = 0;
+                showApp();
+                updateUI();
+                showNotification('Logged in successfully!', 'success');
+            }
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const phone = document.getElementById('signup-phone').value;
+            const type = document.getElementById('signup-type').value;
+            
+            if (name && email && phone && type) {
+                accountCreationTime = Date.now();
+                currentUser = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    type: type,
+                    coins: 0,
+                    createdAt: accountCreationTime
+                };
+                
+                // NEW USER BONUS: 20000 coins for sitting 2 hours in voice rooms
+                userCoins = 0;
+                showApp();
+                updateUI();
+                showNotification('Account created! Earn bonus coins in voice rooms!', 'success');
+            }
+        }
+
+        function loginWithGoogle() {
+            currentUser = {
+                id: Math.random().toString(36).substr(2, 9),
+                name: 'Google User',
+                email: 'user@gmail.com',
+                coins: 0,
+                loginMethod: 'google',
+                createdAt: Date.now()
+            };
+            userCoins = 0;
+            showApp();
+            updateUI();
+            showNotification('Logged in with Google!', 'success');
+        }
+
+        function loginWithFacebook() {
+            currentUser = {
+                id: Math.random().toString(36).substr(2, 9),
+                name: 'Facebook User',
+                email: 'user@facebook.com',
+                coins: 0,
+                loginMethod: 'facebook',
+                createdAt: Date.now()
+            };
+            userCoins = 0;
+            showApp();
+            updateUI();
+            showNotification('Logged in with Facebook!', 'success');
+        }
+
+        function showPhoneLogin() {
+            const phone = prompt('Enter your phone number:');
+            if (phone) {
+                currentUser = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: 'Phone User',
+                    phone: phone,
+                    coins: 0,
+                    loginMethod: 'phone',
+                    createdAt: Date.now()
+                };
+                userCoins = 0;
+                showApp();
+                updateUI();
+                showNotification('Logged in with phone!', 'success');
+            }
+        }
+
+        // ========== EARNING BONUS SYSTEM ==========
+        function addNewUserBonus() {
+            if (!accountCreationTime) return;
+            
+            const daysSinceCreation = (Date.now() - accountCreationTime) / (1000 * 60 * 60 * 24);
+            
+            if (daysSinceCreation <= 8) {
+                // NEW USER: 20,000 coins for 2 hours in voice rooms
+                userCoins += 20000;
+                showNotification('🎉 New User Bonus! +20,000 coins!', 'success');
+            } else {
+                // OLD USER: 10,000 coins for 2 hours in voice rooms
+                userCoins += 10000;
+                showNotification('✅ Bonus! +10,000 coins!', 'success');
+            }
+            
+            updateUI();
+        }
+
+        // ========== NAVIGATION & UI ==========
+        function showApp() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'flex';
+        }
+
+        function navigateTo(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
+            document.getElementById('page-' + page).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function toggleTheme() {
+            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        function toggleMenu() {
+            // Sidebar menu implementation
+        }
+
+        // ========== ROOM FUNCTIONS ==========
+        function openCreateRoom() {
+            document.getElementById('create-room-modal').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function createRoom(e) {
+            e.preventDefault();
+            const name = document.getElementById('room-name').value;
+            const type = document.getElementById('room-type').value;
+            const seats = parseInt(document.getElementById('room-seats').value);
+            
+            const room = {
+                id: Math.random().toString(36).substr(2, 9),
+                name: name,
+                type: type,
+                maxSeats: seats,
+                currentMembers: 1,
+                earnings: 0,
+                icon: type === 'music' ? '🎵' : type === 'talk' ? '💬' : type === 'gaming' ? '🎮' : '❤️'
+            };
+            
+            rooms.push(room);
+            closeModal('create-room-modal');
+            updateRoomsList();
+            navigateTo('rooms');
+            showNotification('Room created successfully!', 'success');
+        }
+
+        function updateRoomsList() {
+            const roomsList = document.getElementById('rooms-list');
+            roomsList.innerHTML = rooms.map(room => `
+                <div class="room-card" onclick="joinRoom('${room.id}')">
+                    <div class="card-image">${room.icon}</div>
+                    <div class="card-info">
+                        <div class="card-name">${room.name}</div>
+                        <div class="room-status">
+                            <span class="room-members">👥 ${room.currentMembers}/${room.maxSeats}</span>
+                            <span class="room-type">${room.type}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function joinRoom(roomId) {
+            const room = rooms.find(r => r.id === roomId);
+            if (room) {
+                showNotification(`Joined ${room.name}!`, 'success');
+                // Start 2-hour timer for bonus
+                setTimeout(addNewUserBonus, 2 * 60 * 60 * 1000); // 2 hours
+            }
+        }
+
+        // ========== STREAM FUNCTIONS ==========
+        function goLive() {
+            const stream = {
+                id: Math.random().toString(36).substr(2, 9),
+                host: currentUser.name,
+                viewers: Math.floor(Math.random() * 100),
+                earnings: 0,
+                isLive: true
+            };
+            
+            streams.push(stream);
+            navigateTo('live');
+            showNotification('You are now LIVE!', 'success');
+            simulateViewers(stream);
+        }
+
+        function simulateViewers(stream) {
+            setInterval(() => {
+                const giftAmount = Math.random() > 0.7 ? Math.floor(Math.random() * 100) + 10 : 0;
+                if (giftAmount > 0) {
+                    const hostEarnings = Math.floor(giftAmount * 0.7);
+                    userCoins += hostEarnings;
+                    document.getElementById('stream-earnings').textContent = `🪙 ${userCoins}`;
+                    addChatMessage('Viewer', `Sent 💎 gift (🪙${giftAmount})`);
+                }
+            }, 3000);
+        }
+
+        function addChatMessage(user, message) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = 'chat-message';
+            messageEl.innerHTML = `
+                <span class="chat-user">${user}:</span>
+                <span class="chat-text">${message}</span>
+            `;
+            chatMessages.appendChild(messageEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chat-input');
+            if (input.value) {
+                addChatMessage('You', input.value);
+                input.value = '';
+            }
+        }
+
+        // ========== WALLET FUNCTIONS ==========
+        function openRecharge() {
+            const amount = prompt('Enter amount to recharge ($):');
+            if (amount) {
+                const coins = Math.floor(amount * 100);
+                userCoins += coins;
+                updateUI();
+                showNotification(`Recharged ${coins} coins!`, 'success');
+            }
+        }
+
+        function openWithdraw() {
+            const amount = prompt(`Available: ${userCoins} coins. Enter amount to withdraw:`);
+            if (amount && amount <= userCoins) {
+                userCoins -= amount;
+                updateUI();
+                showNotification(`Withdrawn ${amount} coins!`, 'success');
+            }
+        }
+
+        // ========== UI UPDATES ==========
+        function updateUI() {
+            if (!currentUser) return;
+            
+            // Update coins display
+            document.getElementById('coins-display').textContent = userCoins;
+            document.getElementById('wallet-coins').textContent = userCoins;
+            document.getElementById('wallet-usd').textContent = (userCoins * 0.007).toFixed(2);
+            
+            // Update profile
+            document.getElementById('profile-name').textContent = currentUser.name;
+            document.getElementById('profile-id').textContent = `ID: ${currentUser.id}`;
+            document.getElementById('stat-earned').textContent = userCoins;
+            
+            // Update leaderboard
+            updateLeaderboard();
+        }
+
+        function updateLeaderboard() {
+            const leaderboard = document.getElementById('leaderboard');
+            leaderboard.innerHTML = `
+                <div class="transaction-item">
+                    <span class="transaction-type">1. ${currentUser.name}</span>
+                    <span class="transaction-amount transaction-credit">🪙 ${userCoins}</span>
+                </div>
+            `;
+        }
+
+        function logout() {
+            if (confirm('Logout?')) {
+                currentUser = null;
+                userCoins = 0;
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('app-screen').style.display = 'none';
+            }
+        }
+
+        function showNotification(message, type) {
+            alert(message); // Replace with proper notification
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', updateUI);
+    </script>
+</body>
+</html>
